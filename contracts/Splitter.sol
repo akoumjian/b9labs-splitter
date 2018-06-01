@@ -4,50 +4,55 @@ pragma solidity ^0.4.23;
 A project contract for B9Lab's Ethereum Developer course
 */
 contract Splitter {
-    address alice;
-    address bob;
-    address carol;
-    mapping (address => uint) availableBalances;
+    mapping (address => address[2]) public splits;
+    mapping (address => uint) public availableBalances;
 
-    event Split(uint256 _value);
+    event SplitCreated(
+        address indexed from,
+        address indexed recipient1,
+        address indexed recipient2
+    );
 
-    event Withdrawal(address indexed _who, uint _value);
+    event Deposit(
+        address indexed from,
+        address indexed recipient1,
+        address indexed recipient2,
+        uint256 value
+    );
 
-    constructor(address _alice, address _bob, address _carol) public {
-        alice = _alice;
-        bob = _bob;
-        carol = _carol;
-    }
+    event Withdrawal(address indexed who, uint value);
 
-    function getBalances() public view returns(address, uint, address, uint, address, uint) {
-        return (
-            alice,
-            availableBalances[alice],
-            bob,
-            availableBalances[bob],
-            carol,
-            availableBalances[carol]
-        );
+    // Set up the recipients of a split from a sender
+    function setSplit(address _address1, address _address2) public {
+        emit SplitCreated(msg.sender, _address1, _address2);
+        splits[msg.sender] = [_address1, _address2];
     }
 
     // Alice can send funds to this contract
     // and it will be split to bob & carol
     function () public payable {
-        require(msg.sender == alice);
-        // If amount is odd save 1 wei for alice
-        if ((msg.value % 2) == 1) {
-            availableBalances[alice] += 1;
+        address[2] memory senderSplit = splits[msg.sender];
+        // Prevent user from burning their ether
+        require(senderSplit[0] != 0);
+        require(senderSplit[1] != 0);
+
+        // If amount is not divisible by two
+        // keep remainder for sender
+        uint remainder = msg.value % 2;
+        if (remainder > 0) {
+            availableBalances[msg.sender] += remainder;
         }
-        uint half = msg.value / 2;
-        availableBalances[bob] += half;
-        availableBalances[carol] += half;
-        emit Split(msg.value);
+        uint half = (msg.value - remainder) / 2;
+
+        emit Deposit(msg.sender, senderSplit[0], senderSplit[1], msg.value);
+        availableBalances[senderSplit[0]] += half;
+        availableBalances[senderSplit[1]] += half;
     }
 
     function withdraw() public {
         uint amount = availableBalances[msg.sender];
         availableBalances[msg.sender] = 0;
-        msg.sender.transfer(amount);
         emit Withdrawal(msg.sender, amount);
+        msg.sender.transfer(amount);
     }
 }
