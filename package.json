@@ -1,0 +1,27 @@
+{
+  "name": "splitter",
+  "version": "1.0.0",
+  "description": "First b9lab project",
+  "main": "truffle-config.js",
+  "directories": {
+    "test": "test"
+  },
+  "devDependencies": {
+    "bluebird": "^3.5.1",
+    "ganache-cli": "^6.1.4",
+    "truffle": "^4.1.13"
+  },
+  "scripts": {
+    "test": "truffle test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/akoumjian/b9labs-splitter.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/akoumjian/b9labs-splitter/issues"
+  },
+  "homepage": "https://github.com/akoumjian/b9labs-splitter#readme"
+}

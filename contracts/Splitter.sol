@@ -4,16 +4,9 @@ pragma solidity ^0.4.23;
 A project contract for B9Lab's Ethereum Developer course
 */
 contract Splitter {
-    mapping (address => address[2]) public splits;
     mapping (address => uint) public availableBalances;
 
-    event SplitCreated(
-        address indexed from,
-        address indexed recipient1,
-        address indexed recipient2
-    );
-
-    event Deposit(
+    event Split(
         address indexed from,
         address indexed recipient1,
         address indexed recipient2,
@@ -22,19 +15,12 @@ contract Splitter {
 
     event Withdrawal(address indexed who, uint value);
 
-    // Set up the recipients of a split from a sender
-    function setSplit(address _address1, address _address2) public {
-        emit SplitCreated(msg.sender, _address1, _address2);
-        splits[msg.sender] = [_address1, _address2];
-    }
-
     // Alice can send funds to this contract
     // and it will be split to bob & carol
-    function () public payable {
-        address[2] memory senderSplit = splits[msg.sender];
+    function split(address person1, address person2) public payable {
         // Prevent user from burning their ether
-        require(senderSplit[0] != 0);
-        require(senderSplit[1] != 0);
+        require(person1 != 0);
+        require(person2 != 0);
 
         // If amount is not divisible by two
         // keep remainder for sender
@@ -44,9 +30,9 @@ contract Splitter {
         }
         uint half = (msg.value - remainder) / 2;
 
-        emit Deposit(msg.sender, senderSplit[0], senderSplit[1], msg.value);
-        availableBalances[senderSplit[0]] += half;
-        availableBalances[senderSplit[1]] += half;
+        emit Split(msg.sender, person1, person2, msg.value);
+        availableBalances[person1] += half;
+        availableBalances[person2] += half;
     }
 
     function withdraw() public {
@@ -54,5 +40,9 @@ contract Splitter {
         availableBalances[msg.sender] = 0;
         emit Withdrawal(msg.sender, amount);
         msg.sender.transfer(amount);
+    }
+
+    function () public {
+        revert();
     }
 }
